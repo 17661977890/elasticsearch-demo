@@ -1,0 +1,20 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: es-application
+  thymeleaf:
+    cache: false
+    mode: HTML
+    encoding: UTF-8
+    servlet:
+      content-type: text/html
+  data:
+    elasticsearch:
+      cluster-nodes: 192.168.31.112:9300
+      cluster-name: my-application
+      repositories:
+        enabled: true
+
+
