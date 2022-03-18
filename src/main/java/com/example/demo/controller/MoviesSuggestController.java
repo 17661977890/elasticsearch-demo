@@ -26,6 +26,11 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * completion自动补全建议搜索：
+ * 1：简单的前缀匹配 自动补全功能
+ * 2：拼音分词器自定义 + 前缀匹配自动补全
+ */
 @RequestMapping(value = "/movies-suggest")
 @RestController
 public class MoviesSuggestController {
@@ -113,19 +118,6 @@ public class MoviesSuggestController {
 
     /**
      * 使用 restHighLevelClient 完成 自动补全功能
-     * {
-     *   "_source": false,
-     *   "suggest": {
-     *     "title_prefix_suggest": {
-     *       "prefix": "lo",
-     *       "completion":{
-     *         "field":"suggest",
-     *         "skip_duplicates": true,
-     *         "size":2
-     *       }
-     *     }
-     *   }
-     * }
      * @param prefix
      * @return
      */
@@ -148,6 +140,68 @@ public class MoviesSuggestController {
 
         // 构建request
         SearchRequest searchRequest = new SearchRequest("movies");
+        searchRequest.source(searchSourceBuilder);
+
+        // 请求获取响应
+        SearchResponse response = null;
+        try {
+            response = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        assert response != null;
+        Suggest suggest = response.getSuggest();
+
+        // 获取自动补全的结果
+        List<String> keywords = null;
+        if (suggest != null) {
+            keywords = new ArrayList<>();
+            List<? extends Suggest.Suggestion.Entry<? extends Suggest.Suggestion.Entry.Option>> entries =
+                    suggest.getSuggestion("my_suggest_document").getEntries();
+            for (Suggest.Suggestion.Entry<? extends Suggest.Suggestion.Entry.Option> entry: entries) {
+                for (Suggest.Suggestion.Entry.Option option: entry.getOptions()) {
+                    String keyword = option.getText().string();
+                    if (!StringUtils.isEmpty(keyword)) {
+                        if (keywords.contains(keyword)) {
+                            continue;
+                        }
+                        keywords.add(keyword);
+                        if (keywords.size() >= 9) {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return keywords;
+
+    }
+
+
+    /**
+     * 使用 restHighLevelClient 完成 拼音分词+自动补全功能 --- 创建的索引是stars(自定义了 拼音分词器)
+     * @param prefix
+     * @return
+     */
+    @GetMapping("/suggest3")
+    public List<String> suggest3(String prefix){
+        //指定在哪个字段搜索
+        String suggestField = "name";
+//        BoolQueryBuilder qb = QueryBuilders.boolQuery();
+
+        // 构建自动补全的配置
+        CompletionSuggestionBuilder completionSuggestionBuilder = new CompletionSuggestionBuilder(suggestField)
+                .prefix(prefix)
+                .skipDuplicates(true)
+                .size(10);
+        SuggestBuilder suggestBuilder = new SuggestBuilder();
+        suggestBuilder.addSuggestion("my_suggest_document", completionSuggestionBuilder );
+
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.suggest(suggestBuilder);
+
+        // 构建request
+        SearchRequest searchRequest = new SearchRequest("stars");
         searchRequest.source(searchSourceBuilder);
 
         // 请求获取响应

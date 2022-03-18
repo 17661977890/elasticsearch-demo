@@ -160,7 +160,7 @@
 
                 // 自动补全
                 var content="";
-                axios.get('/movies-suggest/suggest2/?prefix='+keyWord).then(response=>{
+                axios.get('/movies-suggest/suggest3/?prefix='+keyWord).then(response=>{
                     console.log(response.data)
 
                     for(var i=0;i<response.data.length;i++){
