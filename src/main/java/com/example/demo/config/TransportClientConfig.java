@@ -20,7 +20,7 @@ public class TransportClientConfig {
   public RestHighLevelClient restHighLevelClient(){
     RestHighLevelClient client = new RestHighLevelClient(
             RestClient.builder(
-                    new HttpHost("192.168.31.112", 9200, "http")
+                    new HttpHost("192.168.50.23", 9200, "http")
 //                        new HttpHost("localhost", 9200, "http"),
 //                        new HttpHost("localhost", 9201, "http")
             ));

@@ -12,9 +12,33 @@ import lombok.NoArgsConstructor;
 @Data
 public class GoodInfo {
 
+    /**
+     * 商品图片
+     */
     private String img;
 
-    private String price;
+    /**
+     * 商品价格
+     */
+    private Double price;
 
+    /**
+     * 商品标题 ---- 条件搜素
+     */
     private String title;
+
+    /**
+     * 商品所属店铺名称
+     */
+    private String shop;
+
+    /**
+     * 商品标题额外字段 --- 自动补全、拼音分词
+     */
+    private Object[] suggestTags;
+
+    /**
+     * 商品详情url
+     */
+    private String goodsInfoUrl;
 }

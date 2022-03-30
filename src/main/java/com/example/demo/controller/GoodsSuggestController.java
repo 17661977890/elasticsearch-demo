@@ -33,7 +33,7 @@ import java.util.List;
  */
 @RequestMapping(value = "/movies-suggest")
 @RestController
-public class MoviesSuggestController {
+public class GoodsSuggestController {
 
     /**
      * ElasticsearchRestTemplate(对应的就是restHighLevelClient)
@@ -124,7 +124,7 @@ public class MoviesSuggestController {
     @GetMapping("/suggest2")
     public List<String> suggest2(String prefix){
         //指定在哪个字段搜索
-        String suggestField = "suggest";
+        String suggestField = "suggestTags";
 //        BoolQueryBuilder qb = QueryBuilders.boolQuery();
 
         // 构建自动补全的配置
@@ -139,7 +139,7 @@ public class MoviesSuggestController {
         searchSourceBuilder.suggest(suggestBuilder);
 
         // 构建request
-        SearchRequest searchRequest = new SearchRequest("movies");
+        SearchRequest searchRequest = new SearchRequest("jd-goods");
         searchRequest.source(searchSourceBuilder);
 
         // 请求获取响应
@@ -186,7 +186,7 @@ public class MoviesSuggestController {
     @GetMapping("/suggest3")
     public List<String> suggest3(String prefix){
         //指定在哪个字段搜索
-        String suggestField = "name";
+        String suggestField = "suggestTags";
 //        BoolQueryBuilder qb = QueryBuilders.boolQuery();
 
         // 构建自动补全的配置
@@ -201,7 +201,7 @@ public class MoviesSuggestController {
         searchSourceBuilder.suggest(suggestBuilder);
 
         // 构建request
-        SearchRequest searchRequest = new SearchRequest("stars");
+        SearchRequest searchRequest = new SearchRequest("jd-goods");
         searchRequest.source(searchSourceBuilder);
 
         // 请求获取响应

@@ -12,7 +12,7 @@ spring:
       content-type: text/html
   data:
     elasticsearch:
-      cluster-nodes: 192.168.31.112:9300
+      cluster-nodes: 192.168.50.23:9300
       cluster-name: my-application
       repositories:
         enabled: true
