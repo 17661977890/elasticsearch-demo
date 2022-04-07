@@ -45,7 +45,64 @@ https://github.com/medcl/elasticsearch-analysis-ik
 
 ## 演示效果图 查看image文件夹 
 
-## 相关索引的定义和数据准备：(自动补全的功能)
+## 仿京东电商搜索数据准备
+* 数据建模 （数据来源通过爬虫，爬虫代码比较简易，需要特点数据可能需要单独测试修改）
+```
+# 自定义 analyzer
+PUT jd-goods
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "goods_tags_analyzer":{
+          "char_filter":["html_strip"],
+          "tokenizer":"keyword",
+          "filter":"goods_tags_filter"
+        }
+      },
+      "filter": {
+        "goods_tags_filter":{
+          "type" : "pinyin",
+          "keep_joined_full_pinyin":true,
+          "keep_full_pinyin": false,
+          "keep_original": true
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "img":{
+        "type": "keyword"
+      },
+      "price":{
+        "type": "double"
+      },
+      "title":{
+        "type": "text",
+        "analyzer": "ik_max_word",
+        "search_analyzer": "ik_smart"
+      },
+      "shop":{
+        "type": "text",
+        "analyzer": "ik_max_word",
+        "search_analyzer": "ik_smart"
+      },
+      "suggestTags":{
+        "type": "completion",
+        "analyzer": "goods_tags_analyzer",
+        "search_analyzer": "keyword"
+      },
+      "goodsInfoUrl":{
+        "type": "keyword"
+      }
+    }
+  }
+}
+```
+
+
+## 其他相关索引的定义和数据准备：(自动补全的功能)
 * /suggest2 接口请求 对应的是 movies索引
 ```
 
