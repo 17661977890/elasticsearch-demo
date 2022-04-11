@@ -4,16 +4,22 @@ import com.alibaba.fastjson.JSON;
 import com.example.demo.entity.GoodInfo;
 import com.example.demo.service.SearchService;
 import com.example.demo.utils.JsoupUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.AnalyzeRequest;
+import org.elasticsearch.client.indices.AnalyzeResponse;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.search.SearchHit;
@@ -32,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * 搜索业务实现类
  */
+@Slf4j
 @Service
 public class SearchServiceImpl implements SearchService {
 
@@ -103,15 +110,40 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public List<Map<String, Object>> searchHighLight(String keyWord, int page, int pageSize) throws IOException {
         if(page<=1){
-            page=1;
+            page=0;
         }
         // 搜索条件封装
         SearchRequest searchRequest = new SearchRequest("jd-goods");
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        // 精准匹配
-        TermQueryBuilder termQueryBuilder = QueryBuilders.termQuery("title",keyWord);
-        searchSourceBuilder.query(termQueryBuilder);
+        // 获取搜索内容的分词结果
+//        AnalyzeRequest request = AnalyzeRequest.withField("jd-goods","title", keyWord);
+//        AnalyzeResponse response1 = restHighLevelClient.indices().analyze(request, RequestOptions.DEFAULT);
+//        List<AnalyzeResponse.AnalyzeToken> tokens = response1.getTokens();
+//        for (AnalyzeResponse.AnalyzeToken token:tokens) {
+//            log.info("分词结果：{}",token.getAttributes());
+//        }
+
+
+        AnalyzeRequest request = AnalyzeRequest.withIndexAnalyzer("jd-goods","ik_smart", keyWord);
+        AnalyzeResponse response1 = restHighLevelClient.indices().analyze(request, RequestOptions.DEFAULT);
+        List<AnalyzeResponse.AnalyzeToken> tokens = response1.getTokens();
+
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+        for (AnalyzeResponse.AnalyzeToken token:tokens) {
+            log.info("分词结果：{}",token.getTerm());
+
+            // 精准匹配
+            MatchQueryBuilder matchQueryBuilder = QueryBuilders.matchQuery("title",token.getTerm());
+//        TermQueryBuilder termQueryBuilder = QueryBuilders.termQuery("title",keyWord);
+//        searchSourceBuilder.query(termQueryBuilder);
+            boolQueryBuilder.filter(matchQueryBuilder);
+        }
+
+
+        searchSourceBuilder.query(boolQueryBuilder);
         searchSourceBuilder.timeout(new TimeValue(60, TimeUnit.SECONDS));
+
+
 
         // 高亮
         HighlightBuilder highlightBuilder = new HighlightBuilder();
